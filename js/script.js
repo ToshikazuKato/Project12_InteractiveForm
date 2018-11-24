@@ -6,11 +6,34 @@ $(document).ready(function() {
   const design = $('#design');
   const checkbox = $(':checkbox');
   const label = checkbox.parent();
+  const activities = {
+    'all' : 200,
+    'js-frameworks' : 100,
+    'js-libs' : 100,
+    'express' : 100,
+    'node' : 100,
+    'build-tools' : 100,
+    'npm' : 100
+  };
+  let price = 0;
+  const payment = $('#payment');
+  const registerBtn = $('[type="submit"]');
+  const name = $('#name');
+  const mail = $('#mail');
+  const creditNum = $('#cc-num');
+  const zip = $('#zip');
+  const cvv = $('#cvv');
+  //regex
+  const nameRegex = /^[A-Z][a-zA-Z][^#&<>\"~;$^%{}?]{1,20}$/g;
+  const mailRegex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+  const creditNumRegex = /(5[1-5]\d{14})|(4\d{12}(\d{ 3})?)|(3[47]\d{13})|(6011\d{14})|((30[0-5]|36\d|38\d)\d{11})/;
+  const zipcodeRegex = /^\d{5}$/;
+  const cvvRegex = /^\d{3}$/;
+
   //Define functions
 
   //When the page first loads, the first text field should be in focus by default
   const autofocus = () =>{
-    const name = $('#name');
     name.focus();
   }
 
@@ -82,6 +105,15 @@ $(document).ready(function() {
     });
   }
 
+  const displayPrice = (ele, ths) => {
+    if ( $(ths).prop("checked") === true ) {
+      price += activities[ele];
+    }else{
+      price -= activities[ele];
+    }
+    $('#total')[0].innerText = `Total:$${price}`;
+  }
+
   const registerActivity = () => {
     let checkboxArr = [];
     const dayAndHour = [];
@@ -95,39 +127,179 @@ $(document).ready(function() {
     };
 
     checkbox.click(function(e) {
-      //Add selected values into array
-      // const startAt = $(this).parent().text().indexOf('—')+2;
-      // const endAt = $(this).parent().text().indexOf(',');
-      // dayAndHour.push($("input:checked").parent()[$("input:checked").parent().length-1].innerText.slice(startAt,endAt));
 
-      console.log(e.target.name);
       const selected = e.target.name;
+
+      if($('#total').length === 0){
+        const totalPrice = `<span id="total">Total:$${activities[selected]} </span>`;
+        $('.activities label:last').after(totalPrice);
+      }
+      displayPrice(selected, this);
 
       if( $(this).prop("checked") === true ){
         if(selected === 'js-frameworks' || selected === 'express'){
           selected === 'js-frameworks' ?
-          $('input[name="express"]').attr("disabled",true) : $('input[name="js-frameworks"]').attr("disabled",true);
+          (
+            $('input[name="express"]').attr("disabled",true),
+            $('input[name="express"]').parent().css("color",'grey')
+          ) :
+          (
+            $('input[name="js-frameworks"]').attr("disabled",true),
+            $('input[name="js-frameworks"]').parent().css("color",'grey')
+          );
         }else if (selected === 'js-libs' || selected === 'node'){
           selected === 'js-libs' ?
-          $('input[name="node"]').attr("disabled",true) :
-          $('input[name="js-libs"]').attr("disabled",true);
+          (
+          $('input[name="node"]').attr("disabled",true),
+          $('input[name="node"]').parent().css("color",'grey')
+          ) :
+          (
+          $('input[name="js-libs"]').attr("disabled",true),
+          $('input[name="js-libs"]').parent().css("color",'grey')
+          );
         }
       }else{
         if(selected === 'js-frameworks' || selected === 'express'){
           selected === 'js-frameworks' ?
-          $('input[name="express"]').attr("disabled",false) : $('input[name="js-frameworks"]').attr("disabled",false);
+          (
+            $('input[name="express"]').attr("disabled",false),
+            $('input[name="express"]').parent().css("color",'black')
+          ) :
+          (
+            $('input[name="js-frameworks"]').attr("disabled",false),
+            $('input[name="js-frameworks"]').parent().css("color",'black')
+          );
         }else if (selected === 'js-libs' || selected === 'node'){
           selected === 'js-libs' ?
-          $('input[name="node"]').attr("disabled",false) :
-          $('input[name="js-libs"]').attr("disabled",false);
+          (
+          $('input[name="node"]').attr("disabled",false),
+          $('input[name="node"]').parent().css("color",'black')
+          ) :
+          (
+          $('input[name="js-libs"]').attr("disabled",false),
+          $('input[name="js-libs"]').parent().css("color",'black')
+          );
         }
       }
 
-
-
-
     }); //click event
   }
+
+  const paymentOption = () => {
+    //Credit card is selected by default
+    $('#credit-card').siblings().eq(4).hide();
+    $('#credit-card').siblings().eq(3).hide();
+
+    payment.change(function(){
+      const selectedPayment = $('#payment option:selected').val();
+
+      if($('#payment option').length === 4){
+        $('#payment option:first-child').remove();
+      }
+
+
+      if(selectedPayment === 'credit card'){
+        $('#credit-card').show();
+        $('#credit-card').siblings().eq(4).hide();
+        $('#credit-card').siblings().eq(3).hide();
+
+      }else if(selectedPayment === 'paypal'){
+        $('#credit-card').siblings().eq(3).show();
+        $('#credit-card').hide();
+        $('#credit-card').siblings().eq(4).hide();
+      }else{
+        $('#credit-card').siblings().eq(4).show();
+        $('#credit-card').hide();
+        $('#credit-card').siblings().eq(3).hide();
+      }
+    });
+  }
+
+  const validationForInput = (val,reg) => {
+    return reg.test(val);
+  }
+  name.blur( e => {
+    const boo = validationForInput(e.target.value,nameRegex);
+    boo === true ? name.removeClass("invalid") : name.addClass("invalid");
+  });
+
+  // const formatEmail = email => {
+  //   const regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+  //   return regex.test(email);
+  // }
+
+  mail.blur(e => {
+    const boo = validationForInput(e.target.value,mailRegex);
+    boo === true ? mail.removeClass("invalid") : mail.addClass("invalid");
+  });
+
+  const activityValidation = () => {
+    let selectedAct = [];
+    label.find("input:checked").each((i, val)=>{
+    selectedAct.push(val);
+    });
+
+    if(selectedAct.length > 0){
+      return true;
+    }else{
+      return false;
+    }
+
+  }
+
+  creditNum.blur(e => {
+    const boo = validationForInput(e.target.value,creditNumRegex);
+    boo === true ? creditNum.removeClass("invalid") : creditNum.addClass("invalid");
+  });
+
+  zip.blur(e => {
+    const boo = validationForInput(e.target.value,zipcodeRegex);
+    boo === true ? zip.removeClass("invalid") : zip.addClass("invalid");
+  });
+
+  cvv.blur(e => {
+    const boo = validationForInput(e.target.value,cvvRegex);
+    boo === true ? cvv.removeClass("invalid") : cvv.addClass("invalid");
+  });
+
+  const paymentValidation = option => {
+
+      // credit number validation
+      const creditNumRegex = /(5[1-5]\d{14})|(4\d{12}(\d{ 3})?)|(3[47]\d{13})|(6011\d{14})|((30[0-5]|36\d|38\d)\d{11})/;
+      const resultCreditNum = creditNumRegex.test(creditNum.val());
+      resultCreditNum === false ? creditNum.addClass('invalid') : creditNum.removeClass('invalid') ;
+      //return option === 'credit card' ? resultCreditNum : false;
+
+      // zip code validation
+      const zipcodeRegex = /^\d{5}$/;
+      const resultZip = zipcodeRegex.test(zip.val());
+      resultZip === false ? zip.addClass('invalid') : zip.removeClass('invalid') ;
+      //return option === 'credit card' ? resultZip : false;
+
+      // CVV validation
+      const cvvRegex = /^\d{3}$/;
+      const resultCVV = cvvRegex.test(cvv.val());
+      resultCVV === false ? cvv.addClass('invalid') : cvv.removeClass('invalid') ;
+      //return option === 'credit card' ? resultCVV : false;
+
+      return `option === 'credit card' ?
+                      (resultCreditNum === true ?
+                        (resultZip === true ? resultCVV : false ; ) :
+                      false ;) :
+                    false;`
+
+  }
+
+  registerBtn.click( e => {
+    const activityValid = activityValidation();
+    const selectedPayment = $('#payment option:selected').val();
+    const paymentValid = paymentValidation(selectedPayment);
+    if(name.val() === "" || activityValid === false || paymentValid === false){
+      return false;
+    }else{
+      return true;
+    }
+  });
 
 
   //Run
@@ -135,5 +307,6 @@ $(document).ready(function() {
   jobTitleTextField();
   designChange();
   registerActivity();
+  paymentOption();
 
 });//$(document).ready
