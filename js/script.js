@@ -2,7 +2,6 @@ $(document).ready(function() {
 
   //Define variables
   const jobTitle = $('#title');
-  //const other = $('#title option[value="other"]')[0];
   const design = $('#design');
   const checkbox = $(':checkbox');
   const label = checkbox.parent();
@@ -23,6 +22,7 @@ $(document).ready(function() {
   const creditNum = $('#cc-num');
   const zip = $('#zip');
   const cvv = $('#cvv');
+
   //regex
   const nameRegex = /^[A-Z][a-zA-Z][^#&<>\"~;$^%{}?]{1,20}$/g;
   const mailRegex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
@@ -37,57 +37,39 @@ $(document).ready(function() {
     name.focus();
   }
 
-  //Generate input text for job role when the user selects "other" from dropdwon menu
-  const generateJobTitle = () => {
-    const input = `<input type="text" id="other-title" name="user_jobTitle" placeholder="Your Job Role">`;
-    $('#title').after(input);
-  }
-
-  //Insert text field when other is selected in job role
-  const jobTitleTextField = () =>{
-    jobTitle.change(function(){
-      const selectedJob = $('#title option:selected').val();
-      if( selectedJob === "other" ){
-        generateJobTitle();
-      }else{
-
-        if($('#other-title')){
-            $('#other-title').remove();
-        }
-
-      }
+  //displays only when "Other" is selected. Otherwise hide input field
+  $('#other-title').hide();
+    jobTitle.change(e => {
+      e.target.value !== "other" ? $('#other-title').hide() : $('#other-title').show();
     });
+
+  const themeColorArr = {
+                           "js puns" : ["cornflowerblue","darkslategrey","gold"],
+                           "heart js" : ["tomato","steelblue","dimgrey"]
+                        };
+
+  const themeLogic = (theme) => {
+
+    theme === "js puns" ? $(`#color option[value='${themeColorArr["heart js"][0]}']`).removeAttr('selected') :
+                          $(`#color option[value='${themeColorArr["js puns"][0]}']`).removeAttr('selected');
+
+    themeColorArr[theme].map( (val,index) => {
+      if(index === 0){
+        $(`#color option[value='${val}']`).attr('selected',true);
+      }
+      $(`#color option[value='${val}']`).show();
+
+    } );
   }
 
-  const showDesignOption = (theme) =>{
-    if(theme === "js puns"){
-      $('#color option[value="tomato"]').removeAttr('selected');
+  const hideDesignOption = (theme) =>{
+    let type = "";
+    theme === "js puns" ? type = "heart js" :
+                          type = "js puns" ;
 
-      $('#color option[value="cornflowerblue"]').show();
-      $('#color option[value="cornflowerblue"]').attr('selected',true);
-      $('#color option[value="darkslategrey"]').show();
-      $('#color option[value="gold"]').show();
-    }else{
-      $('#color option[value="cornflowerblue"]').removeAttr('selected');
-
-      $('#color option[value="tomato"]').show();
-      $('#color option[value="tomato"]').attr('selected',true);
-      $('#color option[value="steelblue"]').show();
-      $('#color option[value="dimgrey"]').show();
-    }
-
-  }
-
-  const hideDesignOption = (theme)=>{
-    if(theme === "js puns"){
-      $('#color option[value="tomato"]').hide();
-      $('#color option[value="steelblue"]').hide();
-      $('#color option[value="dimgrey"]').hide();
-    }else{
-      $('#color option[value="cornflowerblue"]').hide();
-      $('#color option[value="darkslategrey"]').hide();
-      $('#color option[value="gold"]').hide();
-    }
+    themeColorArr[type].map( (val,index) => {
+      $(`#color option[value='${val}']`).hide();
+    } );
 
   }
 
@@ -99,7 +81,7 @@ $(document).ready(function() {
       }
       if(selectedDesign !== "Select Theme"){
         //run function
-        showDesignOption(selectedDesign);
+        themeLogic(selectedDesign);
         hideDesignOption(selectedDesign);
       }
     });
@@ -220,7 +202,18 @@ $(document).ready(function() {
   }
   name.blur( e => {
     const boo = validationForInput(e.target.value,nameRegex);
-    boo === true ? name.removeClass("invalid") : name.addClass("invalid");
+    // boo === true ? name.removeClass("invalid") : name.addClass("invalid");
+    // boo === true ? name.siblings('label[for="name"]').removeClass("invalidLabel") : name.siblings('label[for="name"]').addClass("invalidLabel");
+
+    if(boo){
+      name.removeClass("invalid");
+      name.siblings('label[for="name"]').removeClass("invalidLabel");
+    }else{
+      name.addClass("invalid");
+      name.siblings('label[for="name"]').addClass("invalidLabel");
+      name.siblings('label[for="name"]').text('Name: e.g. "Liam Gallagher" ');
+    }
+
   });
 
   // const formatEmail = email => {
@@ -230,7 +223,18 @@ $(document).ready(function() {
 
   mail.blur(e => {
     const boo = validationForInput(e.target.value,mailRegex);
-    boo === true ? mail.removeClass("invalid") : mail.addClass("invalid");
+    // boo === true ? mail.removeClass("invalid") : mail.addClass("invalid");
+    // boo === true ? mail.siblings('label[for="mail"]').removeClass("invalidLabel") : mail.siblings('label[for="mail"]').addClass("invalidLabel");
+    if(boo){
+      mail.removeClass("invalid");
+      mail.siblings('label[for="mail"]').removeClass("invalidLabel");
+
+    }else{
+      mail.addClass("invalid");
+      mail.siblings('label[for="mail"]').addClass("invalidLabel");
+      mail.siblings('label[for="mail"]').text('Email: e.g. "become.fullstack@example.com" ');
+    }
+
   });
 
   const activityValidation = () => {
@@ -242,6 +246,8 @@ $(document).ready(function() {
     if(selectedAct.length > 0){
       return true;
     }else{
+      $(".activities legend").addClass('invalidLabel');
+      $(".activities legend").text("Register for Activities: * Please select one of the options *");
       return false;
     }
 
@@ -249,62 +255,158 @@ $(document).ready(function() {
 
   creditNum.blur(e => {
     const boo = validationForInput(e.target.value,creditNumRegex);
-    boo === true ? creditNum.removeClass("invalid") : creditNum.addClass("invalid");
+    //boo === true ? creditNum.removeClass("invalid") : creditNum.addClass("invalid");
+
+    if(boo){
+      creditNum.removeClass("invalid");
+      creditNum.siblings('label[for="cc-num"]').removeClass("invalidLabel");
+
+    }else{
+      creditNum.addClass("invalid");
+      creditNum.siblings('label[for="cc-num"]').addClass("invalidLabel");
+      creditNum.siblings('label[for="cc-num"]').text('Card Number: * Required');
+    }
+
   });
 
   zip.blur(e => {
     const boo = validationForInput(e.target.value,zipcodeRegex);
-    boo === true ? zip.removeClass("invalid") : zip.addClass("invalid");
+    //boo === true ? zip.removeClass("invalid") : zip.addClass("invalid");
+
+    if(boo){
+      zip.removeClass("invalid");
+      zip.siblings('label[for="zip"]').removeClass("invalidLabel");
+
+    }else{
+      zip.addClass("invalid");
+      zip.siblings('label[for="zip"]').addClass("invalidLabel");
+      zip.siblings('label[for="zip"]').text('Zip Code: * ');
+    }
+
   });
 
   cvv.blur(e => {
     const boo = validationForInput(e.target.value,cvvRegex);
-    boo === true ? cvv.removeClass("invalid") : cvv.addClass("invalid");
+    //boo === true ? cvv.removeClass("invalid") : cvv.addClass("invalid");
+
+    if(boo){
+      cvv.removeClass("invalid");
+      cvv.siblings('label[for="cvv"]').removeClass("invalidLabel");
+
+    }else{
+      cvv.addClass("invalid");
+      cvv.siblings('label[for="cvv"]').addClass("invalidLabel");
+      cvv.siblings('label[for="cvv"]').text('CVV: * ');
+    }
+
   });
 
   const paymentValidation = option => {
 
-      // credit number validation
-      const creditNumRegex = /(5[1-5]\d{14})|(4\d{12}(\d{ 3})?)|(3[47]\d{13})|(6011\d{14})|((30[0-5]|36\d|38\d)\d{11})/;
-      const resultCreditNum = creditNumRegex.test(creditNum.val());
-      resultCreditNum === false ? creditNum.addClass('invalid') : creditNum.removeClass('invalid') ;
-      //return option === 'credit card' ? resultCreditNum : false;
+      if(option === "credit card"){
 
-      // zip code validation
-      const zipcodeRegex = /^\d{5}$/;
-      const resultZip = zipcodeRegex.test(zip.val());
-      resultZip === false ? zip.addClass('invalid') : zip.removeClass('invalid') ;
-      //return option === 'credit card' ? resultZip : false;
+        // credit number validation
+        const creditNumRegex = /(5[1-5]\d{14})|(4\d{12}(\d{ 3})?)|(3[47]\d{13})|(6011\d{14})|((30[0-5]|36\d|38\d)\d{11})/;
+        const resultCreditNum = creditNumRegex.test(creditNum.val());
+        // resultCreditNum === false ? creditNum.addClass('invalid') : creditNum.removeClass('invalid') ;
+        if(resultCreditNum){
+          creditNum.removeClass("invalid");
+          creditNum.siblings('label[for="cc-num"]').removeClass("invalidLabel");
 
-      // CVV validation
-      const cvvRegex = /^\d{3}$/;
-      const resultCVV = cvvRegex.test(cvv.val());
-      resultCVV === false ? cvv.addClass('invalid') : cvv.removeClass('invalid') ;
-      //return option === 'credit card' ? resultCVV : false;
+        }else{
+          creditNum.addClass("invalid");
+          creditNum.siblings('label[for="cc-num"]').addClass("invalidLabel");
+          creditNum.siblings('label[for="cc-num"]').text('Card Number: * Required');
+        }
 
-      return `option === 'credit card' ?
-                      (resultCreditNum === true ?
-                        (resultZip === true ? resultCVV : false ; ) :
-                      false ;) :
-                    false;`
+        //return option === 'credit card' ? resultCreditNum : false;
+
+        // zip code validation
+        const zipcodeRegex = /^\d{5}$/;
+        const resultZip = zipcodeRegex.test(zip.val());
+        //resultZip === false ? zip.addClass('invalid') : zip.removeClass('invalid') ;
+
+        if(resultZip){
+          zip.removeClass("invalid");
+          zip.siblings('label[for="zip"]').removeClass("invalidLabel");
+
+        }else{
+          zip.addClass("invalid");
+          zip.siblings('label[for="zip"]').addClass("invalidLabel");
+          zip.siblings('label[for="zip"]').text('Zip Code: * ');
+        }
+
+        //return option === 'credit card' ? resultZip : false;
+
+        // CVV validation
+        const cvvRegex = /^\d{3}$/;
+        const resultCVV = cvvRegex.test(cvv.val());
+        //resultCVV === false ? cvv.addClass('invalid') : cvv.removeClass('invalid') ;
+        //return option === 'credit card' ? resultCVV : false;
+
+        if(resultCVV){
+          cvv.removeClass("invalid");
+          cvv.siblings('label[for="cvv"]').removeClass("invalidLabel");
+
+        }else{
+          cvv.addClass("invalid");
+          cvv.siblings('label[for="cvv"]').addClass("invalidLabel");
+          cvv.siblings('label[for="cvv"]').text('CVV: * ');
+        }
+
+        return `option === 'credit card' ?
+                        (resultCreditNum === true ?
+                          (resultZip === true ? resultCVV : false ; ) :
+                        false ;) :
+                      false;`
+
+      }else{
+        $("#payment").addClass('invalid');
+        $('label[for="payment"]').addClass("invalidLabel");
+        $('label[for="payment"]').text("I'm going to pay with: * select one of the options");
+        return false;
+      }
 
   }
 
   registerBtn.click( e => {
+    const selectedDesign = $('#design option:selected').val();
     const activityValid = activityValidation();
     const selectedPayment = $('#payment option:selected').val();
     const paymentValid = paymentValidation(selectedPayment);
-    if(name.val() === "" || activityValid === false || paymentValid === false){
+
+    if(selectedDesign !== "Select Theme"){
+      design.removeClass("invalid");
+      design.siblings('label[for="design"]').removeClass("invalidLabel");
+    }else{
+      design.addClass("invalid");
+      design.siblings('label[for="design"]').addClass("invalidLabel");
+      design.siblings('label[for="design"]').text('Design: *Please Select one of the options');
+    }
+
+    const res = validationForInput(mail.val(),mailRegex);
+
+    if(res){
+      mail.removeClass("invalid");
+      mail.siblings('label[for="mail"]').removeClass("invalidLabel");
+
+    }else{
+      mail.addClass("invalid");
+      mail.siblings('label[for="mail"]').addClass("invalidLabel");
+      mail.siblings('label[for="mail"]').text('Email: e.g. "become.fullstack@example.com" ');
+    }
+
+    if(name.val() === "" || mail.val() === "" || selectedDesign === "Select Theme" || activityValid === false || paymentValid === false){
       return false;
     }else{
       return true;
     }
   });
 
+  // validation messages
 
   //Run
   autofocus();
-  jobTitleTextField();
   designChange();
   registerActivity();
   paymentOption();

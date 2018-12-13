@@ -155,6 +155,10 @@ button:hover {
   transition: border-color .4s, background-color .4s;
 }
 
+.invalidLabel{
+  color : #ff0000;
+}
+
 /* =================================
   Media Queries
 ==================================== */
