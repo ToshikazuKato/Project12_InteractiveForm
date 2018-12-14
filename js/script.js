@@ -16,6 +16,7 @@ $(document).ready(function() {
   };
   let price = 0;
   const payment = $('#payment');
+  const creditCard = $('#credit-card');
   const registerBtn = $('[type="submit"]');
   const name = $('#name');
   const mail = $('#mail');
@@ -82,16 +83,23 @@ $(document).ready(function() {
 
   }
 
+  //hide color label and menu by default
+  $("#colors-js-puns").hide();
+
   const designChange = () => {
-    design.change(function(){
+    design.change( e => {
       const selectedDesign = $('#design option:selected').val();
       if($('#design option').length === 3){
         $('#design option:first-child').remove();
       }
       if(selectedDesign !== "Select Theme"){
         //run function
+        $("#colors-js-puns").show();
         themeLogic(selectedDesign);
         hideDesignOption(selectedDesign);
+        let designBoo = false;
+        selectedDesign !== "Select Theme" ? designBoo = true : designBoo = false;
+        errorMessage(designBoo, design, "design", designErrMes);
       }
     });
   }
@@ -104,7 +112,7 @@ $(document).ready(function() {
     }
     $('#total')[0].innerText = `Total:$${price}`;
   }
-  // * Refactor *
+
   const registerActivity = () => {
     let checkboxArr = [];
     const dayAndHour = [];
@@ -127,59 +135,44 @@ $(document).ready(function() {
       }
       displayPrice(selected, this);
 
+      const checkboxValidation = (name, boo, color) => {
+        $(`input[name='${name}']`).attr("disabled",boo),
+        $(`input[name='${name}']`).parent().css("color",color)
+      }
+
       if( $(this).prop("checked") === true ){
         if(selected === 'js-frameworks' || selected === 'express'){
-          selected === 'js-frameworks' ?
-          (
-            $('input[name="express"]').attr("disabled",true),
-            $('input[name="express"]').parent().css("color",'grey')
-          ) :
-          (
-            $('input[name="js-frameworks"]').attr("disabled",true),
-            $('input[name="js-frameworks"]').parent().css("color",'grey')
-          );
+          selected === 'js-frameworks' ? checkboxValidation("express", true, "grey"):
+                                         checkboxValidation("js-frameworks", true, "grey");
+
         }else if (selected === 'js-libs' || selected === 'node'){
-          selected === 'js-libs' ?
-          (
-          $('input[name="node"]').attr("disabled",true),
-          $('input[name="node"]').parent().css("color",'grey')
-          ) :
-          (
-          $('input[name="js-libs"]').attr("disabled",true),
-          $('input[name="js-libs"]').parent().css("color",'grey')
-          );
+          selected === 'js-libs' ? checkboxValidation("node", true, "grey"):
+                                   checkboxValidation("js-libs", true, "grey");
         }
       }else{
         if(selected === 'js-frameworks' || selected === 'express'){
-          selected === 'js-frameworks' ?
-          (
-            $('input[name="express"]').attr("disabled",false),
-            $('input[name="express"]').parent().css("color",'black')
-          ) :
-          (
-            $('input[name="js-frameworks"]').attr("disabled",false),
-            $('input[name="js-frameworks"]').parent().css("color",'black')
-          );
+          selected === 'js-frameworks' ? checkboxValidation("express", false, "black"):
+                                         checkboxValidation("js-frameworks", false, "black");
+
         }else if (selected === 'js-libs' || selected === 'node'){
-          selected === 'js-libs' ?
-          (
-          $('input[name="node"]').attr("disabled",false),
-          $('input[name="node"]').parent().css("color",'black')
-          ) :
-          (
-          $('input[name="js-libs"]').attr("disabled",false),
-          $('input[name="js-libs"]').parent().css("color",'black')
-          );
+          selected === 'js-libs' ? checkboxValidation("node", false, "black"):
+                                   checkboxValidation("js-libs", false, "black");
+
         }
       }
-
+      activityValidation();
     }); //click event
   }
   // * Refactor *
   const paymentOption = () => {
+
+    const hideEle = (index) => {
+      index !== 0 ? creditCard.siblings().eq(index).hide() : creditCard.hide();
+    }
+
     //Credit card is selected by default
-    $('#credit-card').siblings().eq(4).hide();
-    $('#credit-card').siblings().eq(3).hide();
+    hideEle(3);
+    hideEle(4);
 
     payment.change(function(){
       const selectedPayment = $('#payment option:selected').val();
@@ -188,20 +181,21 @@ $(document).ready(function() {
         $('#payment option:first-child').remove();
       }
 
-
       if(selectedPayment === 'credit card'){
-        $('#credit-card').show();
-        $('#credit-card').siblings().eq(4).hide();
-        $('#credit-card').siblings().eq(3).hide();
+        creditCard.show();
+        hideEle(3);
+        hideEle(4);
 
       }else if(selectedPayment === 'paypal'){
-        $('#credit-card').siblings().eq(3).show();
-        $('#credit-card').hide();
-        $('#credit-card').siblings().eq(4).hide();
+        creditCard.siblings().eq(3).show();
+        hideEle(0);
+        hideEle(4);
+
       }else{
-        $('#credit-card').siblings().eq(4).show();
-        $('#credit-card').hide();
-        $('#credit-card').siblings().eq(3).hide();
+        creditCard.siblings().eq(4).show();
+        hideEle(0);
+        hideEle(3);
+
       }
     });
   }
@@ -227,7 +221,7 @@ $(document).ready(function() {
 
   });
 
-  mail.blur(e => {
+  mail.blur( e => {
     const boo = validationForInput(e.target.value,mailRegex);
     errorMessage(boo, mail, "mail", mailErrMes);
 
@@ -240,6 +234,7 @@ $(document).ready(function() {
     });
 
     if(selectedAct.length > 0){
+      $(".activities legend").removeClass('invalidLabel');
       return true;
     }else{
       $(".activities legend").addClass('invalidLabel');
