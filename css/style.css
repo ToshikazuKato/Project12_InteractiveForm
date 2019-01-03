@@ -183,9 +183,22 @@ button:hover {
 		margin-left: 2.5%;
 	}
 	.col-3 {
-		width: 23%;
+		width: 18%;
 	}
 	.col-6 {
-		width: 49%;
+		width: 59%;
 	}
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 992px;
+  }
+
 }

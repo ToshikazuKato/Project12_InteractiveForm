@@ -1,8 +1,14 @@
 $(document).ready(function() {
 
+  // ****************conditional ErrMessage and real-time error message ****************
+
   //Define variables
   const jobTitle = $('#title');
   const design = $('#design');
+  const themeColorArr = {
+                           "js puns" : ["cornflowerblue","darkslategrey","gold"],
+                           "heart js" : ["tomato","steelblue","dimgrey"]
+                        };
   const checkbox = $(':checkbox');
   const label = checkbox.parent();
   const activities = {
@@ -35,7 +41,8 @@ $(document).ready(function() {
   const nameErrMes = 'Name: e.g. "Liam Gallagher" ';
   const mailErrMes = 'Email: e.g. "become.fullstack@example.com" ';
   const activityErrMes = "Register for Activities: * Please select one of the options *";
-  const creditNumErrMes = 'Card Number: * Required';
+  const creditNumErrMesEmpty = 'Card Number: * Enter Credit Card Number';
+  const creditNumErrMes = 'Card Number: * Enter 13 to 16 digits Number';
   const zipErrMes = 'Zip Code: * ';
   const cvvErrMes = 'CVV: * ';
   const paymentErrMes = "I'm going to pay with: * select one of the options";
@@ -53,40 +60,36 @@ $(document).ready(function() {
       e.target.value !== "other" ? $('#other-title').hide() : $('#other-title').show();
     });
 
-  const themeColorArr = {
-                           "js puns" : ["cornflowerblue","darkslategrey","gold"],
-                           "heart js" : ["tomato","steelblue","dimgrey"]
-                        };
-
-  const themeLogic = (theme) => {
-
-    theme === "js puns" ? $(`#color option[value='${themeColorArr["heart js"][0]}']`).removeAttr('selected') :
-                          $(`#color option[value='${themeColorArr["js puns"][0]}']`).removeAttr('selected');
-
-    themeColorArr[theme].map( (val,index) => {
-      if(index === 0){
-        $(`#color option[value='${val}']`).attr('selected',true);
-      }
-      $(`#color option[value='${val}']`).show();
-
-    } );
-  }
-
-  const hideDesignOption = (theme) =>{
-    let type = "";
-    theme === "js puns" ? type = "heart js" :
-                          type = "js puns" ;
-
-    themeColorArr[type].map( (val, index) => {
-      $(`#color option[value='${val}']`).hide();
-    } );
-
-  }
-
   //hide color label and menu by default
   $("#colors-js-puns").hide();
-
+  //T-shirt design logic
   const designChange = () => {
+    //only display the color options that match the design selected in the "Design" menu ${themeColorArr}
+    const themeLogic = (theme) => {
+
+      theme === "js puns" ? $(`#color option[value='${themeColorArr["heart js"][0]}']`).removeAttr('selected') :
+                            $(`#color option[value='${themeColorArr["js puns"][0]}']`).removeAttr('selected');
+
+      themeColorArr[theme].map( (val,index) => {
+        if(index === 0){
+          $(`#color option[value='${val}']`).attr('selected',true);
+        }
+        $(`#color option[value='${val}']`).show();
+
+      } );
+    }
+    //hide the color options that doesn't match the design selected in the "Design" menu ${themeColorArr}
+    const hideDesignOption = (theme) =>{
+      let type = "";
+      theme === "js puns" ? type = "heart js" :
+                            type = "js puns" ;
+
+      themeColorArr[type].map( (val, index) => {
+        $(`#color option[value='${val}']`).hide();
+      } );
+
+    }
+    //display and hide depending on the design selected
     design.change( e => {
       const selectedDesign = $('#design option:selected').val();
       if($('#design option').length === 3){
@@ -103,7 +106,7 @@ $(document).ready(function() {
       }
     });
   }
-
+  //display price for activities that are selected
   const displayPrice = (ele, ths) => {
     if ( $(ths).prop("checked") === true ) {
       price += activities[ele];
@@ -112,7 +115,24 @@ $(document).ready(function() {
     }
     $('#total')[0].innerText = `Total:$${price}`;
   }
+  //check whether at least one activity is selected or not. Display error message by adding css class if needed.
+  const activityValidation = () => {
+    let selectedAct = [];
+    label.find("input:checked").each((i, val)=>{
+      selectedAct.push(val);
+    });
 
+    if(selectedAct.length > 0){
+      $(".activities legend").removeClass('invalidLabel');
+      return true;
+    }else{
+      $(".activities legend").addClass('invalidLabel');
+      $(".activities legend").text(activityErrMes);
+      return false;
+    }
+
+  }
+  //Register ativity logic
   const registerActivity = () => {
     let checkboxArr = [];
     const dayAndHour = [];
@@ -124,7 +144,7 @@ $(document).ready(function() {
     for (let i = 1; i < checkbox.length; i++) {
       activityName.push(checkbox[i].name);
     };
-
+    //Make it disable when any other activity are planned on the same day as the activity selected by checkbox
     checkbox.click(function(e) {
 
       const selected = e.target.name;
@@ -163,23 +183,22 @@ $(document).ready(function() {
       activityValidation();
     }); //click event
   }
-  // * Refactor *
+  // Payment option logic
   const paymentOption = () => {
-
-    const hideEle = (index) => {
+    //function that hides element for payment option by index
+    const hideEle = index => {
       index !== 0 ? creditCard.siblings().eq(index).hide() : creditCard.hide();
     }
 
     //Credit card is selected by default
+    if($('#payment option').length === 4){
+      $('#payment option:first-child').remove();
+    }
     hideEle(3);
     hideEle(4);
-
+    //check what's selected and show&hide elements depending selected option
     payment.change(function(){
       const selectedPayment = $('#payment option:selected').val();
-
-      if($('#payment option').length === 4){
-        $('#payment option:first-child').remove();
-      }
 
       if(selectedPayment === 'credit card'){
         creditCard.show();
@@ -199,11 +218,11 @@ $(document).ready(function() {
       }
     });
   }
-
-  const validationForInput = (val,reg) => {
+  //validation check by parameters (value, regex)
+  const validationForInput = (val, reg) => {
     return reg.test(val);
   }
-
+  //Add or remove error message by adding css class depending on the result of validationForInput function
   const errorMessage = (res, obj, val, message) => {
     if(res){
       obj.removeClass("invalid");
@@ -214,54 +233,38 @@ $(document).ready(function() {
       obj.siblings(`label[for="${val}"]`).text(message);
     }
   }
-
+  //real-time validation for name
   name.blur( e => {
     const boo = validationForInput(e.target.value,nameRegex);
     errorMessage(boo, name, "name", nameErrMes);
 
   });
-
+  //real-time validation for mail
   mail.blur( e => {
     const boo = validationForInput(e.target.value,mailRegex);
     errorMessage(boo, mail, "mail", mailErrMes);
 
   });
-
-  const activityValidation = () => {
-    let selectedAct = [];
-    label.find("input:checked").each((i, val)=>{
-    selectedAct.push(val);
-    });
-
-    if(selectedAct.length > 0){
-      $(".activities legend").removeClass('invalidLabel');
-      return true;
-    }else{
-      $(".activities legend").addClass('invalidLabel');
-      $(".activities legend").text(activityErrMes);
-      return false;
-    }
-
-  }
-
+  //real-time validation for credit card number
   creditNum.blur(e => {
     const boo = validationForInput(e.target.value,creditNumRegex);
-    errorMessage(boo, creditNum, "cc-num", creditNumErrMes);
-
+    //Achieved conditional error message validation
+    e.target.value === "" ? errorMessage(boo, creditNum, "cc-num", creditNumErrMesEmpty) :
+                            errorMessage(boo, creditNum, "cc-num", creditNumErrMes);
   });
-
+  //real-time validation for zip code
   zip.blur(e => {
     const boo = validationForInput(e.target.value,zipcodeRegex);
     errorMessage(boo, zip, "zip", zipErrMes);
 
   });
-
+  //real-time validation for cvv
   cvv.blur(e => {
     const boo = validationForInput(e.target.value,cvvRegex);
     errorMessage(boo, cvv, "cvv", cvvErrMes);
 
   });
-
+  // payment validation when credit card is selected
   const paymentValidation = option => {
 
       if(option === "credit card"){
@@ -294,6 +297,7 @@ $(document).ready(function() {
 
   }
 
+  //check all required fields are filled correectly on submission
   registerBtn.click( e => {
     const selectedDesign = $('#design option:selected').val();
     const activityValid = activityValidation();
@@ -313,8 +317,6 @@ $(document).ready(function() {
       return true;
     }
   });
-
-  // validation messages
 
   //Run
   autofocus();
